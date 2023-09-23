@@ -32,6 +32,7 @@ str(fec22.df) #V21-v25 variables with constant NA values
 head(fec22.df)
 tail(fec22.df)
 ```
+Here we can see that...
 
 2.Report any variables that are missing values systematically. Is this what you expect? Why or why not?
 
