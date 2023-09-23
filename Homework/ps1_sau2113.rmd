@@ -1,0 +1,106 @@
+---
+title: "Problem Set 1"
+author: Sebastian Urbina
+date: "`r format(Sys.time(), '%d %B, %Y')`" 
+output: pdf_document
+---
+From the files section on CourseWorks, download the file fec22.txt, which contains data for candidate political action committees for the 2022 elections in the U.S. Use the file fec.codebook.txt to see the values for the fields. Write R code to do the following.
+
+```{r setup, include=TRUE}
+#Loading packages
+library(tidyverse)
+library(haven)
+library(psych)
+```
+
+## 1.Read the data into a data object called fec22.df using the appropriate command. Report the number of records/observations in the data.
+
+```{r, include=TRUE}
+#Importing data fec22.txt local disc 
+setwd("/Volumes/TOSHIBA EXT/1.1_Columbia University/Fall 2023/POLSGU4716_001_2023_3 - Data Science for Political Analytics/data_science_pol_anlt/Homework/")
+getwd()
+
+fec22.df <- read.delim("fec22.txt", header=FALSE, , sep = "|")
+```
+
+
+```{r, include=TRUE}
+# Number of records/observations in the data
+print(dim(fec22.df))
+names(fec22.df)
+str(fec22.df) #V21-v25 variables with constant NA values
+head(fec22.df)
+tail(fec22.df)
+```
+
+2.Report any variables that are missing values systematically. Is this what you expect? Why or why not?
+
+```{r, include=TRUE}
+str(fec22.df) #V21-v25 variables with constant NA values
+print(describe(fec22.df[,c(21:25)]))
+```
+
+3. Subset the data to produce two different data objects—one for Senate candidates and one for House candidates (the variable *CAND OFFICE DISTRICT* equals 0 for Senate candidates, is greater than 0 for House candidates). Do a check that will give you a sense that the subsetting worked correctly.
+
+```{r, include=TRUE}
+sen_df <- fec22.df %>%
+filter(V20 == 0)
+
+describe(sen_df$V20)
+summary(sen_df$V20)
+
+hou_df <-fec22.df %>%
+filter(V20 > 0)
+
+describe(hou_df$V20)
+summary(hou_df$V20)
+```
+
+
+4. Calculate and report the mean, median, and standard deviation for total receipts (variable name TTL RECEIPTS) for races for each chamber. Do this for the subsets produced in the previous step without using dplyr. Also do this on the original data that you read in (i.e., fec22.df) using dplyr and compare the results from the two approaches. 
+
+``` {r, include=TRUE}
+results <- matrix(NA, nrow = 2, ncol = 3 ) 
+results[1,1] <- round(mean(sen_df$V6),0)
+results[1,2] <- round(median(sen_df$V6),0)
+results[1,3] <- round(sd(sen_df$V6),0)
+results[2,1] <- round(mean(hou_df$V6),0)
+results[2,2] <- round(median(hou_df$V6),0)
+results[2,3] <- round(sd(hou_df$V6),0)
+
+colnames(results) <- c("Mean","Median","SD")
+rownames(results) <- c("Senate candidates"," House candidates")
+results <- tibble(results)
+print(results)
+```
+
+```{r, include=TRUE}
+fec22.df %>%
+group_by(V20==0) %>%
+summarise(mean = mean(V6, na.rm = TRUE),
+          median = median(V6, na.rm = TRUE),
+          sd = sd(V6, na.rm = TRUE))
+```
+
+
+5. For the data that includes only House candidates, produce density plots that shows two distributions—one for candidates who are incumbents and one for candidates who are challengers. The variable CAND ICI equals “I” for incumbents, equals “C” for challengers, and equals “O” for candidates in open seat races. Write a sentence that summarizes what you see.
+
+```{r, include=TRUE}
+# Density Plot for House candidates
+hou_df2 <- hou_df %>%
+filter(V3 == "I" | V3 == "O" | V3 == "C")
+p <- ggplot(hou_df2, aes(x=V3, fill= V3)) + 
+  geom_density(alpha=0.4)
+  
+print(p)
+```
+
+
+```{r, input=TRUE}
+hou_df2 <- hou_df %>%
+filter(V3 == "I" |  V3 == "C")
+p <- ggplot(hou_df2, aes(x=log(V10), fill= V3)) + 
+  geom_density(alpha=0.4)
+  
+print(p)
+```
