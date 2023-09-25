@@ -60,7 +60,7 @@ summary(hou_df$V20)
 
 4. Calculate and report the mean, median, and standard deviation for total receipts (variable name TTL RECEIPTS) for races for each chamber. Do this for the subsets produced in the previous step without using dplyr. Also do this on the original data that you read in (i.e., fec22.df) using dplyr and compare the results from the two approaches. 
 
-``` {r, include=TRUE}
+```{r, include=TRUE}
 results <- matrix(NA, nrow = 2, ncol = 3 ) 
 results[1,1] <- round(mean(sen_df$V6),0)
 results[1,2] <- round(median(sen_df$V6),0)
@@ -100,8 +100,14 @@ print(p)
 ```{r, input=TRUE}
 hou_df2 <- hou_df %>%
 filter(V3 == "I" |  V3 == "C")
-p <- ggplot(hou_df2, aes(x=log(V10), fill= V3)) + 
+p <- ggplot(hou_df2, aes(x=log(V10), y = ..density.., fill= V3)) + 
   geom_density(alpha=0.4)
   
 print(p)
+```
+
+
+```{r, input=TRUE}
+ggplot(fec22.df, aes(x = V3, y = V10))+
+geom_boxplot()
 ```
