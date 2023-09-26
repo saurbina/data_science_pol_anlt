@@ -6,7 +6,7 @@ output: pdf_document
 ---
 From the files section on CourseWorks, download the file fec22.txt, which contains data for candidate political action committees for the 2022 elections in the U.S. Use the file fec.codebook.txt to see the values for the fields. Write R code to do the following.
 
-```{r setup, include=TRUE}
+```{r setup, include=FALSE}
 #Loading packages and erase memory
 rm(list=ls())
 library(tidyverse)
@@ -16,16 +16,17 @@ library(psych)
 
 ## 1.Read the data into a data object called fec22.df using the appropriate command. Report the number of records/observations in the data.
 
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Importing data fec22.txt from local disc 
 setwd("/Volumes/TOSHIBA EXT/1.1_Columbia University/Fall 2023/POLSGU4716_001_2023_3 - Data Science for Political Analytics/data_science_pol_anlt/Homework/")
-getwd()
+```
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Loading data
 fec22.df <- read.delim("fec22.txt", header=FALSE, sep = "|")
 ```
 
-
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Number of records/observations in the data
 print(dim(fec22.df))
 #Names of variables
@@ -33,9 +34,7 @@ names(fec22.df)
 # Characteristics of variables
 str(fec22.df) #V21-v25 variables with constant NA values
 head(fec22.df) # first observations
-tail(fec22.df)# last observations
-
-view(fec22.df)
+#tail(fec22.df)# last observations
 ```
 From this exploratory analysis, we can see that the data has 4027 observations and 30 variables. The variables V21 to V25 have constant NA.
 Also, we can see that the names of the variables are changed from V1 to V30, so we will use the codebook to guide us in our analysis.
@@ -44,15 +43,24 @@ Also, we can see that the names of the variables are changed from V1 to V30, so 
 
 ## 2.Report any variables that are missing values systematically. Is this what you expect? Why or why not?
 
-```{r, include=TRUE}
-str(fec22.df) #V21-v25 variables with constant NA values
-
-sum(is.na(fec22.df$V21))
-sum(is.na(fec22.df$V22))
-sum(is.na(fec22.df$V23))
-sum(is.na(fec22.df$V24))
-sum(is.na(fec22.df$V25))
-
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+#V21-v25 variables with constant NA values
+str(fec22.df[,21:25]) 
+#Creating matrix for puttinf results
+results1 <- matrix(NA, nrow = 5, ncol = 1 ) 
+#Calculating the number of NA of each variable
+results1[1,1] <-sum(is.na(fec22.df$V21))
+results1[2,1] <-sum(is.na(fec22.df$V22))
+results1[3,1] <-sum(is.na(fec22.df$V23))
+results1[4,1] <-sum(is.na(fec22.df$V24))
+results1[5,1] <-sum(is.na(fec22.df$V25))
+# Naming the columns 
+colnames(results1) <- c("NA")
+#Naming the rows
+rownames(results1) <- c("V21","V22","V23","V24","V25")
+# Printing the results in a tibble format
+print(results1)
+#Describe the variables using the describe function from the psych package
 print(describe(fec22.df[,c(21:25)]))
 
 ```
@@ -60,9 +68,9 @@ print(describe(fec22.df[,c(21:25)]))
 As mentioned, variables __V21 to V25__ have systematically missing values. This can occur because these variables are from another data set, and we can hypothesize that the data was not merged correctly or that the "key" variables for the merging at the moment to realize a left_joint don't have a match in the other data set, resulting in an import of new variables with data NA. We can hypothesize this because variables v21 to V25 came from the Election result data included in the 1996-2006 files.
 
 
-3. Subset the data to produce two different data objects—one for Senate candidates and one for House candidates (the variable *CAND OFFICE DISTRICT* equals 0 for Senate candidates, is greater than 0 for House candidates). Do a check that will give you a sense that the subsetting worked correctly.
+## 3. Subset the data to produce two different data objects—one for Senate candidates and one for House candidates (the variable *CAND OFFICE DISTRICT* equals 0 for Senate candidates, is greater than 0 for House candidates). Do a check that will give you a sense that the subsetting worked correctly.
 
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Creating new variable for Sen and Hou candidates
 fec22.df <- fec22.df %>%
 mutate(cand = case_when(V20 == 0 ~ "Senate",
@@ -81,21 +89,21 @@ hou_df <-fec22.df %>%
 filter(V20 > 0) %>%
 mutate(n = 1)
 
-#Cheking the subsets for correct outcome
+#Cheking the subsets for correct outcome Senate
 describe(sen_df$V20)
 summary(sen_df$V20)
 sum(sen_df$n)
 
-
+#Cheking the subsets for correct outcome House
 describe(hou_df$V20)
 summary(hou_df$V20)
 sum(hou_df$n)
 ```
 
 
-4. Calculate and report the mean, median, and standard deviation for total receipts (variable name TTL RECEIPTS) for races for each chamber. Do this for the subsets produced in the previous step without using dplyr. Also do this on the original data that you read in (i.e., fec22.df) using dplyr and compare the results from the two approaches. 
+## 4. Calculate and report the mean, median, and standard deviation for total receipts (variable name TTL RECEIPTS) for races for each chamber. Do this for the subsets produced in the previous step without using dplyr. Also do this on the original data that you read in (i.e., fec22.df) using dplyr and compare the results from the two approaches. 
 
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Creating a matrix for putting the results
 results <- matrix(NA, nrow = 2, ncol = 3 ) 
 # Calculating the mean, median and sd for Senate
@@ -111,12 +119,11 @@ colnames(results) <- c("Mean","Median","SD")
 #Naming the rows
 rownames(results) <- c("Senate candidates"," House candidates")
 # Printing the results into the matrix created
-results <- tibble(results)
 print(results)
 ```
 
 
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Calculating the mean, median and sd for Senate and House using dplyr and the original data, for this we need to group the data by V20 == 0, which is the variable that indicates the chamber and all the observations that not equal to 0 are House candidates.
 print(fec22.df %>%
 group_by(V20==0) %>%
@@ -126,9 +133,9 @@ summarise(mean = mean(V6, na.rm = TRUE),
 ```
 
 
-5. For the data that includes only House candidates, produce density plots that shows two distributions—one for candidates who are incumbents and one for candidates who are challengers. The variable CAND ICI equals “I” for incumbents, equals “C” for challengers, and equals “O” for candidates in open seat races. Write a sentence that summarizes what you see.
+## 5. For the data that includes only House candidates, produce density plots that shows two distributions—one for candidates who are incumbents and one for candidates who are challengers. The variable CAND ICI equals “I” for incumbents, equals “C” for challengers, and equals “O” for candidates in open seat races. Write a sentence that summarizes what you see.
 
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Density Plot for House candidates, incumbents,challengers and candidates in open seats.
 hou_df2 <- hou_df %>%
 filter(V3 == "I" | V3 == "O" | V3 == "C")
@@ -139,7 +146,7 @@ print(p)
 ```
 
 
-```{r, input=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Density plot for House candidates, incumbents observing the variable V10, which is the Beginning cash
 hou_df2 <- hou_df %>%
 filter(V3 == "I" |  V3 == "C")
@@ -151,7 +158,10 @@ p  + scale_x_continuous(limits = c(0, 20))
 print(p)
 ```
 
-```{r, input=TRUE}
+
+
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Density plot for House candidates, incumbents observing the variable V10, which is the Loans from candidate
 hou_df2 <- hou_df %>%
 filter(V3 == "I" |  V3 == "C")
