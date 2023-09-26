@@ -132,7 +132,7 @@ summarise(mean = mean(V6, na.rm = TRUE),
 # Density Plot for House candidates, incumbents,challengers and candidates in open seats.
 hou_df2 <- hou_df %>%
 filter(V3 == "I" | V3 == "O" | V3 == "C")
-p <- ggplot(hou_df2, aes(x=V3, fill= V3)) + 
+p <- ggplot(hou_df, aes(x=V3, fill= V3)) + 
   geom_density(alpha=0.4)
   
 print(p)
@@ -145,6 +145,8 @@ hou_df2 <- hou_df %>%
 filter(V3 == "I" |  V3 == "C")
 p <- ggplot(hou_df2, aes(x=log(V10), y = ..density.., fill= V3)) + 
   geom_density(alpha=0.4)
+
+p  + scale_x_continuous(limits = c(0, 20))
   
 print(p)
 ```
@@ -156,7 +158,7 @@ filter(V3 == "I" |  V3 == "C")
 p1 <- ggplot(hou_df2, aes(x=log(V13), y = ..density.., fill= V3)) + 
   geom_density(alpha=0.4)
 
-p1 + scale_x_continuous(limits = c(0, 20))
+p1 <- p1 + scale_x_continuous(limits = c(0, 21))
   
 print(p1)
 ```
