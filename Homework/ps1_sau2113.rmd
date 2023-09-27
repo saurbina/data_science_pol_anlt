@@ -36,9 +36,10 @@ str(fec22.df) #V21-v25 variables with constant NA values
 head(fec22.df) # first observations
 #tail(fec22.df)# last observations
 ```
+
 From this exploratory analysis, we can see that the data has 4027 observations and 30 variables. The variables V21 to V25 have constant NA.
 Also, we can see that the names of the variables are changed from V1 to V30, so we will use the codebook to guide us in our analysis.
-
+write more of the dataset. 
 
 
 ## 2.Report any variables that are missing values systematically. Is this what you expect? Why or why not?
@@ -124,7 +125,9 @@ print(results)
 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-# Calculating the mean, median and sd for Senate and House using dplyr and the original data, for this we need to group the data by V20 == 0, which is the variable that indicates the chamber and all the observations that not equal to 0 are House candidates.
+# Calculating the mean, median and sd for Senate and House using dplyr and the original data, 
+#for this we need to group the data by V20 == 0, which is the variable that indicates the chamber 
+#and all the observations that not equal to 0 are House candidates.
 print(fec22.df %>%
 group_by(V20==0) %>%
 summarise(mean = mean(V6, na.rm = TRUE),
