@@ -1,10 +1,10 @@
 ---
 title: "Problem Set 1"
 author: Sebastian Urbina
-date: "`r format(Sys.time(), '%d %B, %Y')`" 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 ---
-From the files section on CourseWorks, download the file fec22.txt, which contains data for candidate political action committees for the 2022 elections in the U.S. Use the file fec.codebook.txt to see the values for the fields. Write R code to do the following.
+From the files section on CourseWorks, download the file fec22.txt, which contains data for candidate political action committees for the 2022 elections in the U.S. Use the file fec.codebook.txt to see the values for the fields. Write R code to do the following. 
 
 ```{r setup, include=FALSE}
 #Loading packages and erase memory
@@ -12,41 +12,54 @@ rm(list=ls())
 library(tidyverse)
 library(haven)
 library(psych)
+library(lubridate)
 ```
 
 ## 1.Read the data into a data object called fec22.df using the appropriate command. Report the number of records/observations in the data.
+```{r, include=FALSE, message = FALSE, warning = FALSE}
+path = "/Volumes/TOSHIBA EXT/1.1_Columbia University/Fall 2023/POLSGU4716_001_2023_3 - Data Science for Political Analytics/data_science_pol_anlt/Homework/"
+```
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Importing data fec22.txt from local disc 
-setwd("/Volumes/TOSHIBA EXT/1.1_Columbia University/Fall 2023/POLSGU4716_001_2023_3 - Data Science for Political Analytics/data_science_pol_anlt/Homework/")
+# Setting the working directory
+setwd(path)
 ```
+We will set the working directory in the folder where the data in located locally. 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 #Loading data
-fec22.df <- read.delim("fec22.txt", header=FALSE, sep = "|")
+fec22.df <- read.csv("fec22.txt", header=FALSE, sep = "|")
+#Names of variables
+names(fec22.df)
 ```
+Using the read.csv function we are capable of importing the data into R as a data frame. We are using as separetor the "|" statement and indicating that the data set not have a header. We can see that the names of the variables are not includes, and their respective names go between V1 to V30. Because of this we will use the codebook **fec.codebook.txt** to guide us in our analysis.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Number of records/observations in the data
 print(dim(fec22.df))
-#Names of variables
-names(fec22.df)
-# Characteristics of variables
-str(fec22.df) #V21-v25 variables with constant NA values
-head(fec22.df) # first observations
-#tail(fec22.df)# last observations
+########################### Data set characteristics ###########################
+#V21-v25 variables with constant NA values
+print(str(fec22.df)) 
+glimpse(fec22.df)
+# first observations
+head(fec22.df) 
+#Changing character to date variable
+fec22.df$V28 <- mdy(fec22.df$V28) 
+class(fec22.df$V28)
 ```
 
-From this exploratory analysis, we can see that the data has 4027 observations and 30 variables. The variables V21 to V25 have constant NA.
-Also, we can see that the names of the variables are changed from V1 to V30, so we will use the codebook to guide us in our analysis.
-write more of the dataset. 
-
+From this exploratory analysis, we can see that the data has 4027 observations and 30 variables. The variables V21 to V25 have constant NA. Using the glimpse function we can observe in much detail each variable. We can see that the varaible V28 which is a variable of class date its not recognized that way and instead is imported as a character variable. We will correct this using the lubridate package. 
 
 ## 2.Report any variables that are missing values systematically. Is this what you expect? Why or why not?
-
+Employing the "str" function, we can first see that V21 to V25 may have systematic NA cases in their observations.  
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 #V21-v25 variables with constant NA values
 str(fec22.df[,21:25]) 
+```
+To verify our hypothesis, we will independently sum the NA cases in each column. If, respectively, they have a total of 4027 NA, it would mean that they have a systematic NA problem in that column. For this task, we will apply the "__sum()__" and "__is.na()__" function for each column, giving us the outcome required. 
+
+```{r, includes = TRUE, message = FALSE, warning = FALSE}
 #Creating matrix for puttinf results
 results1 <- matrix(NA, nrow = 5, ncol = 1 ) 
 #Calculating the number of NA of each variable
@@ -63,46 +76,52 @@ rownames(results1) <- c("V21","V22","V23","V24","V25")
 print(results1)
 #Describe the variables using the describe function from the psych package
 print(describe(fec22.df[,c(21:25)]))
-
 ```
 
-As mentioned, variables __V21 to V25__ have systematically missing values. This can occur because these variables are from another data set, and we can hypothesize that the data was not merged correctly or that the "key" variables for the merging at the moment to realize a left_joint don't have a match in the other data set, resulting in an import of new variables with data NA. We can hypothesize this because variables v21 to V25 came from the Election result data included in the 1996-2006 files.
-
+As expected, variables __V21 to V25__ have systematically missing values. This problem can occur because these variables come from another data set merged with the original one. We can hypothesize that the merged process was not correctly done or that the "key" variables for the merging at the moment to perform the left_joint function didn't match the other data set, resulting in an import of the new variables with NA cases. We can hypothesize this because variables v21 to V25 came from the Election result data included in the 1996-2006 files.
 
 ## 3. Subset the data to produce two different data objects—one for Senate candidates and one for House candidates (the variable *CAND OFFICE DISTRICT* equals 0 for Senate candidates, is greater than 0 for House candidates). Do a check that will give you a sense that the subsetting worked correctly.
 
+First, utilizing the case_when and mutate functions, we will create a new variable named "cand" to divide the candidates for each electoral race (Senate and House). This variable will help review if the subsetting data sets worked correctly. 
+
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-#Creating new variable for Sen and Hou candidates
+#Creating new variable for Sen and Hou candidates, we will use this later to
+#check if the subsetting worked us we wanted.
 fec22.df <- fec22.df %>%
 mutate(cand = case_when(V20 == 0 ~ "Senate",
                         V20 > 0 ~ "House",
-                        TRUE ~ "NA"))
+                        TRUE ~ NA))
 
-table(fec22.df$cand)
+print(table(fec22.df$cand))
+```
+In the table above, it is appreciated that there are 3406 candidates for the House and 617 for the Senate election. We should be capable of performing these same results for each subset created and storing them in their respective objects. To do so, we will use the filter command. 
 
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Creating subset for Senate candidates
 sen_df <- fec22.df %>%
-filter(V20 == 0) %>%
-mutate(n = 1)
+filter(V20 == 0) 
 
 # Creating subset for House candidates
 hou_df <-fec22.df %>%
-filter(V20 > 0) %>%
-mutate(n = 1)
+filter(V20 > 0)
 
 #Cheking the subsets for correct outcome Senate
 describe(sen_df$V20)
 summary(sen_df$V20)
-sum(sen_df$n)
+nrow(sen_df)
 
 #Cheking the subsets for correct outcome House
 describe(hou_df$V20)
 summary(hou_df$V20)
-sum(hou_df$n)
+nrow(hou_df)
 ```
+Once the data was subsetted, we used three methods to verify that our subsets correctly separated the data. We first obtain a description of the specific variable in each new subset, where we get the number of observations, the mean, median, sd, min and max, etc. In the case of the Senate, we obtained 617 observations with a Mean, Median, and SD of 0, meaning that all the observations are equal to 0. On the other hand, in the case of the House, we obtained 3406 observations with a minimum value of 1 for all the observations. These results confirm that the subset was divided correctly from the original dataset. 
 
+Searching for more validation, we performed two more tests, a summary of statistics and a count of total rows per dataset. These tests corroborated our results. 
 
 ## 4. Calculate and report the mean, median, and standard deviation for total receipts (variable name TTL RECEIPTS) for races for each chamber. Do this for the subsets produced in the previous step without using dplyr. Also do this on the original data that you read in (i.e., fec22.df) using dplyr and compare the results from the two approaches. 
+
+We will use the base r commands to perform the mean, median and sd for the variable total receipts for each subset. We will put the results in a 2 x 3 matrix, where the rows will be the Senate and House candidates, and the columns will be the mean, median, and sd.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Creating a matrix for putting the results
@@ -122,56 +141,60 @@ rownames(results) <- c("Senate candidates"," House candidates")
 # Printing the results into the matrix created
 print(results)
 ```
-
+In this case, we will use the dplyr packages, which allow us to use pipelines (>%>), divide the data into groups (group_by), and summarize the statistics (mean, median, sd), all of this in a few lines of code. 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-# Calculating the mean, median and sd for Senate and House using dplyr and the original data, 
-#for this we need to group the data by V20 == 0, which is the variable that indicates the chamber 
-#and all the observations that not equal to 0 are House candidates.
+# Calculating the mean, median and sd for Senate and House using dplyr and the 
+#original data, for this we need to group the data by V20 == 0, which is the 
+#variable that indicates the chamber and all the observations that not equal to 
+# 0 are House candidates. We will use the summarize finction contain in dplyr.
 print(fec22.df %>%
-group_by(V20==0) %>%
-summarise(mean = mean(V6, na.rm = TRUE),
+group_by(V20==0) %>% 
+summarize(mean = mean(V6, na.rm = TRUE),
           median = median(V6, na.rm = TRUE),
           sd = sd(V6, na.rm = TRUE)))
 ```
-
+The results are the same, but using the dplyr package allows us to perform the same result using fewer lines of code, making it preferable.
 
 ## 5. For the data that includes only House candidates, produce density plots that shows two distributions—one for candidates who are incumbents and one for candidates who are challengers. The variable CAND ICI equals “I” for incumbents, equals “C” for challengers, and equals “O” for candidates in open seat races. Write a sentence that summarizes what you see.
 
-```{r, include=TRUE, message = FALSE, warning = FALSE}
-# Density Plot for House candidates, incumbents,challengers and candidates in open seats.
-hou_df2 <- hou_df %>%
-filter(V3 == "I" | V3 == "O" | V3 == "C")
-p <- ggplot(hou_df, aes(x=V3, fill= V3)) + 
-  geom_density(alpha=0.4)
-  
-print(p)
-```
-
+We will show the density distribution of the variable COH_BOP, which contains the initial cash that candidates have at their disposal. We will scale the x-axis by a logarithm of ten for a more comprehensive graph. Also, we will use the ggplot2 packages to create this figure because it gives us more tools when constructing our representation. 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-#Density plot for House candidates, incumbents observing the variable V10, which is the Beginning cash
+#Density plot for House candidates, incumbents observing the variable V10, 
+#which is the Beginning cash.
 hou_df2 <- hou_df %>%
 filter(V3 == "I" |  V3 == "C")
-p <- ggplot(hou_df2, aes(x=log(V10), y = ..density.., fill= V3)) + 
-  geom_density(alpha=0.4)
 
-p  + scale_x_continuous(limits = c(0, 20))
-  
-print(p)
+p <- ggplot(hou_df2, aes(x=V10, y = ..density.., fill= V3)) + 
+  geom_density(alpha=0.4) + 
+  scale_x_log10()+
+  labs(title = "Density plot for House candidates,\n observing the Beginnig cash variable", 
+       x = "Log Beginning cash", y = "Density",
+       fill = "Type") +
+       scale_x_continuous(limits = c(0, 15)) 
+
+p
 ```
 
+This graph exhibits the vast difference between incumbents and challengers in initial campaign cash. We can see that challengers in their totality remain at the lower part of the x_axis, meaning lower amounts of money. On the other hand, the distribution of incumbents is more uniform, having a variance in the relationship of initial capital. Still, it portrays that a large number of incumbents initiated the electoral campaign with large sums of money. This can be seen in the right part of the x-axis. 
 
-
+It's interesting that in the incumbent's group, extreme cases can be seen at the right part of the graph. Finally, it is essential to mention that in this case, having less than 0 dollars at the beginning of the campaign is impossible, so the density curve starts at 0, which is why the representation is of a half curve.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-#Density plot for House candidates, incumbents observing the variable V10, which is the Loans from candidate
+#Density plot for House candidates, incumbents observing the variable V10, 
+#which is the Loans from candidate.
 hou_df2 <- hou_df %>%
 filter(V3 == "I" |  V3 == "C")
-p1 <- ggplot(hou_df2, aes(x=log(V13), y = ..density.., fill= V3)) + 
-  geom_density(alpha=0.4)
+p1 <- ggplot(hou_df2, aes(x=V13, y = ..density.., fill= V3)) + 
+  geom_density(alpha=0.4)+
+  scale_x_log10()+
+  labs(title = "Density plot for House candidates,\n observing Loans", 
+       x = "Amount of the Loans", y = "Density",
+       fill = "Type")
 
-p1 <- p1 + scale_x_continuous(limits = c(0, 21))
-  
-print(p1)
+
+p1 <- p1 + scale_x_continuous(limits = c(0, 1))
+p1
 ```
+This final graph demonstrates the amount of cash in loans of the candidates. We can see that challengers generally ask for more loans and that incumbents have loans bigger than challengers. 
